@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Grade 3 — Lesson Plan Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f7f9fb; color:#222; margin:24px; }
+    .container { max-width:900px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 6px 18px rgba(10,30,60,0.06); }
+    h1 { margin-top:0; color:#0b66c3; }
+    label { display:block; margin-top:12px; font-weight:600; }
+    select,input,textarea,button { width:100%; padding:10px; margin-top:8px; border-radius:6px; border:1px solid #d1d7de; box-sizing:border-box; font-size:15px; }
+    .row { display:flex; gap:12px; }
+    .row > div { flex:1; }
+    button { background:#0b66c3; color:#fff; border:0; cursor:pointer; font-weight:700; }
+    button.secondary { background:#6c757d; margin-top:8px; }
+    textarea { min-height:160px; resize:vertical; background:#f4f6f8; }
+    small { color:#666; }
+    .meta { margin-top:10px; color:#444; }
+    @media (max-width:720px){ .row { flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Grade 3 — Lesson Plan Generator</h1>
+    <p>Pick a week, set duration (default 70), then <strong>Generate</strong>. The page will look up the unit/topic & objectives from your dataset and open ChatGPT with a prompt that asks it to generate the rest (success criteria, activities, plenary, vocabulary, differentiation, assessment).</p>
+
+    <label>Grade</label>
+    <input id="grade" value="3" />
+
+    <div class="row">
+      <div>
+        <label>Week number</label>
+        <select id="weekSelect"></select>
+      </div>
+      <div>
+        <label>Lesson duration (minutes)</label>
+        <input id="duration" value="70" />
+      </div>
+    </div>
+
+    <label>Quick preview (Topic / Unit & Objectives will be filled automatically)</label>
+    <div style="background:#fbfcfe;border:1px solid #e6eef9;padding:10px;border-radius:6px;">
+      <strong>Topic / Unit:</strong> <span id="topicPreview">—</span><br/>
+      <strong>Learning Objectives:</strong>
+      <div id="objectivesPreview" style="margin-top:6px;white-space:pre-wrap;color:#111;"></div>
+      <strong>Resources:</strong>
+      <div id="resourcesPreview" style="margin-top:6px;white-space:pre-wrap;color:#111;"></div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <button id="generateBtn">Generate & Open ChatGPT</button>
+      <button id="copyBtn" class="secondary">Copy Prompt to Clipboard</button>
+    </div>
+
+    <label style="margin-top:14px">Generated prompt (you can edit before sending in ChatGPT)</label>
+    <textarea id="promptArea" placeholder="Generated prompt appears here..."></textarea>
+
+    <p class="meta"><small>Note: the site sends only the prompt to ChatGPT via opening a new tab with a prefilled message URL. You will need to press Enter / Send in ChatGPT to receive the lesson plan. The page does not use any external servers — everything runs in your browser.</small></p>
+  </div>
+
+  <script>
+/* ========== HARD-CODED DATA (from your sheet) ========== */
+const lessons = [
+  { week:1, dates:"18/08/2025", unit:"DL3.1 Document Creation",
+    objectives:`3TC.08 Navigate storage hierarchy appropriate to the device.
+3TC.04 Identify common features of onscreen layouts and icons across a range of applications.
+3TC.02 Know what shortcuts are and be able to use shortcuts for cut, copy, paste, save, undo and re-do.`,
+    resources:`A set of cards representing files; selection of files stored in different locations; pictures of cut/copy/save/undo/redo icons with definitions; screenshots of different applications.` },
+  { week:2, dates:"25/08/2025", unit:"DL3.1 Document Creation",
+    objectives:`3TC.03 Identify and use spell-checking and proof-reading tools.
+3TC.05 Add images to a document.
+3TC.02 Know what shortcuts are and be able to use shortcuts for cut, copy, paste, save, undo and re-do.
+3TC.01 Develop fluency and accuracy when typing in increasing quantity.
+3TC.08 Navigate storage hierarchy appropriate to the device.`,
+    resources:`Text processing software with spell-check; a document containing spelling errors; a collection of pre-selected images to load.` },
+  { week:3, dates:"01/09/2025", unit:"DL3.1 Document Creation",
+    objectives:`3TC.06 Compose, read, respond to and share online messages with specific individuals and with groups.
+3TC.01 Develop fluency and accuracy when typing in increasing quantity.`,
+    resources:`An example blog with 3-4 posts and a few age-appropriate comments.` },
+  { week:4, dates:"08/09/2025", unit:"DL3.1 Document Creation",
+    objectives:`3TC.01 Develop fluency and accuracy when typing in increasing quantity.
+3TC.04 Identify common features of on screen layouts and icons across a range of applications.
+3TC.02 Know what shortcuts are and be able to use shortcuts for cut, copy, paste, save, undo and re-do.
+3TC.03 Identify and use spell-checking and proof-reading tools.
+3TC.05 Add images to a document.
+3TC.06 Compose, read, respond to and share online messages with specific individuals and with groups.`,
+    resources:`Pre-selected text and images for copying/pasting; access to a blogging platform.` },
+  { week:5, dates:"15/09/2025", unit:"DL3.1 Document Creation",
+    objectives:`Document Creation Project
+3TC.01 Develop fluency and accuracy when typing in increasing quantity.
+3TC.04 Identify common features of onscreen layouts and icons across a range of applications.
+3TC.02 Know what shortcuts are and be able to use shortcuts for cut, copy, paste, save, undo and re-do.
+3TC.03 Identify and use spell-checking and proof-reading tools.
+3TC.05 Add images to a document.
+3TC.06 Compose, read, respond to and share online messages with specific individuals and with groups.`,
+    resources:`Project resources as required.` },
+  { week:6, dates:"22/09/2025", unit:"DL3.3 Safe Digital Research",
+    objectives:`3TC.04 Identify common features of onscreen layouts and icons across a range of applications.`,
+    resources:`Screenshots of commonly used web browsers; labels detailing website features.` },
+  { week:7, dates:"29/09/2025", unit:"DL3.3 Safe Digital Research",
+    objectives:`3TC.07 Use keywords to search for information in a search tool.`,
+    resources:`Printed pieces of information on discrete subjects; numbered sheets; an index.` },
+  { week:8, dates:"06/10/2025", unit:"DL3.3 Safe Digital Research",
+    objectives:`3SW.03 Know that device use can be monitored.
+3TC.07 Use keywords to search for information in a search tool.`,
+    resources:`A set of questions for extracting keywords; a search-record table.` },
+  { week:9, dates:"13/10/2025", unit:"DL3.3 Safe Digital Research",
+    objectives:`3DW.01 Understand that people create online content for a purpose, including advertising, expressing opinions and sharing information.`,
+    resources:`A list of reputable websites; website extracts of varying reliability; a reliability checklist.` },
+  { week:10, dates:"20/10/2025", unit:"DL3.3 Safe Digital Research",
+    objectives:`3DW.01 Understand that people create online content for a purpose, including advertising, expressing opinions and sharing information.`,
+    resources:`A list of reputable websites; website extracts; reliability checklist.` },
+  { week:11, dates:"27/10/2025", unit:"DL3.3 Safe Digital Research",
+    objectives:`Safe Digital Research Project
+3TC.01 Develop fluency and accuracy when typing in increasing quantity.
+3TC.03 Identify and use spell-checking and proof-reading tools.
+3TC.05 Add images to a document.
+3TC.06 Compose, read, respond to and share online messages with specific individuals and with groups.
+3TC.07 Use keywords to search for information in a search tool.
+3DW.01 Understand that people create online content for a purpose.`,
+    resources:`Project resources as required.` },
+  { week:12, dates:"03/11/2025", unit:"C3.1 Computational Thinking",
+    objectives:`3CT.01 Follow, understand, edit and correct linear algorithms.
+3CT.03 Identify steps that are repeated within everyday tasks.
+3CT.04 Know that logical thinking is used in the creation of algorithms.
+3CT.06 Know that many tasks can be divided into smaller sections to make them easier to follow and to edit.`,
+    resources:`Key vocabulary cards for ‘computational thinking’ and ‘algorithm’; carousel of games; multi-step maths problem; practical tasks.` },
+  { week:13, dates:"10/11/2025", unit:"C3.1 Computational Thinking",
+    objectives:`3CT.03 Identify steps that are repeated within everyday tasks.
+3CT.06 Know that many tasks can be divided into smaller sections to make them easier to follow and to edit.`,
+    resources:`Prepared repeating dance routines.` },
+  { week:14, dates:"17/11/2025", unit:"C3.1 Computational Thinking",
+    objectives:`3CT.01 Follow, understand, edit and correct linear algorithms.
+3CT.02 Understand that efficient algorithms are concise.
+3CT.04 Know that logical thinking is used in the creation of algorithms.
+3P.01 Understand the benefit of editing programs to make them clear and concise.`,
+    resources:`Prepared descriptions of a creature; key vocabulary cards for 'abstraction', 'computational thinking', 'algorithm', 'logic'.` },
+  { week:15, dates:"24/11/2025", unit:"C3.1 Computational Thinking",
+    objectives:`3CT.01 Follow, understand, edit and correct linear algorithms.
+3CT.02 Understand that efficient algorithms are concise.
+3CT.04 Know that logical thinking is used in the creation of algorithms.
+3P.01 Understand the benefit of editing programs to make them clear and concise.`,
+    resources:`Prepared navigation course using PE equipment; blindfolds.` },
+  { week:16, dates:"01/12/2025", unit:"C3.1 Computational Thinking",
+    objectives:`3CT.05 Predict the outcome of a change to an algorithm presented as a sequence of steps.
+3CT.07 Identify the inputs to algorithms.
+3CT.08 Know how to develop linear algorithms to produce an output based on an input.`,
+    resources:`Key vocabulary cards for 'input' and 'output'; prepared grid map.` },
+  { week:17, dates:"08/12/2025", unit:"C3.1 Computational Thinking",
+    objectives:`Computational Thinking Project
+(3CT.01, 3CT.02, 3CT.06, 3CT.05, 3CT.07, 3CT.08)`,
+    resources:`Project resources as required.` },
+  { week:18, dates:"15/12/2025", unit:"End of Term Activities", objectives:``, resources:`` },
+  { week:19, dates:"22/12/2025", unit:"End of Term Break", objectives:``, resources:`` },
+  { week:20, dates:"29/12/2025", unit:"End of Term Break", objectives:``, resources:`` },
+  { week:21, dates:"05/01/2026", unit:"C3.2 What is a Computer?",
+    objectives:`3CS.01 Know hardware and software components form a working system.
+3CS.02 Know differences between hardware and software.
+3CS.03 Identify manual and automatic input devices.
+3CS.04 Know different file types that can be stored.`,
+    resources:`Key vocab cards for 'hard drive', 'processor', 'hardware'; cardboard/computer parts; images of OS icons.` },
+  { week:22, dates:"12/01/2026", unit:"C3.2 What is a Computer?",
+    objectives:`3DC.01 Identify networked hardware in familiar environments.
+3DC.02 Identify services available on familiar networks.
+3DC.03 Understand advantages/disadvantages of a network.`,
+    resources:`Key vocabulary cards for 'network','hardware','software','network switch','wireless access point','wi-fi','server'; classroom plan.` },
+  { week:23, dates:"19/01/2026", unit:"C3.2 What is a Computer?",
+    objectives:`3DC.01 Identify networked hardware in familiar environments.
+3DC.02 Identify services available on familiar networks.
+3DC.03 Understand advantages/disadvantages of a network.`,
+    resources:`Classroom network map; simplified school map; vocabulary cards; coloured pencils.` },
+  { week:24, dates:"26/01/2026", unit:"C3.2 What is a Computer?",
+    objectives:`3DC.01 Identify networked hardware in familiar environments.
+3DC.02 Identify services available on familiar networks.
+3DC.03 Understand advantages/disadvantages of a network.
+3CS.01 Know hardware & software components form a working system.`,
+    resources:`Key vocabulary cards for 'modem' and 'router'; sticky notes; submarine cable map.` },
+  { week:25, dates:"02/02/2026", unit:"C3.2 What is a Computer? (Project)",
+    objectives:`What is a Computer? Project
+(3DC.01,3DC.02,3DC.03,3CS.01,3CS.06,3CS.07)`,
+    resources:`Project resources as required.` },
+  { week:26, dates:"09/02/2026", unit:"C3.3 Secret Codes",
+    objectives:`3DC.04 Know ciphers are a way of keeping info secret.
+3DC.05 Know how to write and decode messages using simple code.`,
+    resources:`Prepared timeline; one complete and one blank code key.` },
+  { week:27, dates:"16/02/2026", unit:"Tet Holiday", objectives:``, resources:`` },
+  { week:28, dates:"23/02/2026", unit:"Tet Holiday", objectives:``, resources:`` },
+  { week:29, dates:"02/03/2026", unit:"C3.3 Secret Codes",
+    objectives:`3CT.01 Follow, understand, edit and correct linear algorithms.
+3CT.07 Identify inputs to an algorithm.
+3P.05 Make changes within a block of code to achieve outcomes.
+3CT.05 Predict outcome of a change to an algorithm.
+3P.07 Benefits of collaborative programming.`,
+    resources:`Key vocabulary card for 'program'; Scratch demo programs.` },
+  { week:30, dates:"09/03/2026", unit:"C3.3 Secret Codes",
+    objectives:`(multiple CT & programming objectives as listed in sheet)`,
+    resources:`Key vocabulary card for 'initialisation'; Scratch 'conversation' project.` },
+  { week:31, dates:"16/03/2026", unit:"C3.3 Secret Codes",
+    objectives:`(multiple CT & programming objectives as listed in sheet)`,
+    resources:`Key vocabulary card for 'initialisation'; Scratch 'goal' project.` },
+  { week:32, dates:"23/03/2026", unit:"C3.3 Secret Codes",
+    objectives:`3CS.05 Computers can be programmed to control machines.
+3CS.06 Identify common IoT devices.
+3CS.07 Explain role of robots in manufacturing.`,
+    resources:`` },
+  { week:33, dates:"30/03/2026", unit:"C3.3 Secret Codes (Project)",
+    objectives:`Secret Codes Project (programming & testing skills)`,
+    resources:`Project resources as required.` },
+  { week:34, dates:"06/04/2026", unit:"C3.4 Data Cafe",
+    objectives:`3MD.01 Identify problems solved through data collection & interpretation.`,
+    resources:`Key vocabulary card for 'data'; pictures of cakes.` },
+  { week:35, dates:"13/04/2026", unit:"C3.4 Data Cafe",
+    objectives:`3MD.03 Record discrete & categorical data using devices.
+3MD.04 Know spreadsheets are rows & columns of cells.`,
+    resources:`Spreadsheet software; key vocab card for 'cell'.` },
+  { week:36, dates:"20/04/2026", unit:"C3.4 Data Cafe",
+    objectives:`3MD.02 Investigate ways of representing discrete & categorical data using digital tools.
+3MD.03 Record discrete & categorical data using devices.
+3MD.04 Know spreadsheets have rows & columns.`,
+    resources:`Key vocab cards for 'spreadsheet' and 'cell'; cake sales spreadsheet.` },
+  { week:37, dates:"27/04/2026", unit:"C3.4 Data Cafe",
+    objectives:`3MD.04 Know spreadsheets are comprised of rows & columns.
+3MD.05 Format cells according to purpose.`,
+    resources:`Cake sales spreadsheets.` },
+  { week:38, dates:"04/05/2026", unit:"C3.4 Data Cafe",
+    objectives:`3MD.06 Demonstrate how to select data to solve problems.
+3MD.03 Record discrete & categorical data using devices.`,
+    resources:`Face templates.` },
+  { week:39, dates:"11/05/2026", unit:"C3.4 Data Cafe (Project)",
+    objectives:`Data Cafe Project (multiple data & spreadsheet objectives)`,
+    resources:`Project resources as required.` },
+  { week:40, dates:"18/05/2026", unit:"End of Year Activities", objectives:``, resources:`` },
+  { week:41, dates:"25/05/2026", unit:"End of Year Activities", objectives:``, resources:`` }
+];
+/* ========== END DATA ========== */
+
+/* populate week dropdown */
+const weekSel = document.getElementById('weekSelect');
+for (let i=1;i<=41;i++){
+  const opt = document.createElement('option');
+  opt.value = i; opt.textContent = `Week ${i}`;
+  weekSel.appendChild(opt);
+}
+
+/* helper to find lesson by week */
+function findLesson(weekNum) {
+  const n = Number(weekNum);
+  return lessons.find(l => l.week === n) || null;
+}
+
+/* preview update */
+function updatePreview() {
+  const week = Number(weekSel.value);
+  const lesson = findLesson(week);
+  const topicEl = document.getElementById('topicPreview');
+  const objEl = document.getElementById('objectivesPreview');
+  const resEl = document.getElementById('resourcesPreview');
+
+  if (!lesson) {
+    topicEl.textContent = "No data for this week.";
+    objEl.textContent = "";
+    resEl.textContent = "";
+    return;
+  }
+  topicEl.textContent = lesson.unit || "—";
+  objEl.textContent = lesson.objectives || "—";
+  resEl.textContent = lesson.resources || "—";
+}
+
+/* build the ChatGPT prompt */
+function buildPrompt(grade, duration, lesson) {
+  // We intentionally send OBJECTIVES to ChatGPT and ask it to generate Success Criteria and other items.
+  const prompt = `Create a detailed ${duration}-minute lesson plan for Grade ${grade} (${lesson.unit || 'Unit/Topic not provided'}).
+
+Unit / Topic: ${lesson.unit || '-'}
+Week: ${lesson.week}
+Learning Objectives:
+${lesson.objectives || '-'}
+Resources / Materials (for teacher reference):
+${lesson.resources || '-'}
+
+INSTRUCTIONS for ChatGPT:
+- Generate a clear Lesson Title that fits the unit & objectives.
+- Generate Success Criteria based directly on the Learning Objectives (short, student-friendly).
+- Produce Key Vocabulary (with short child-friendly definitions).
+- Create detailed Lesson Activities with time estimates (minutes) that together total approximately the lesson duration. Ensure the final activity is a PLENARY that checks understanding and consolidates learning.
+- Provide Differentiation notes for struggling / on-level / advanced learners.
+- Suggest short formative Assessment tasks (how to check learning during or after the lesson).
+- Format the lesson plan in this structure:
+1) Lesson Title
+2) Grade & Subject
+3) Duration
+4) Learning Objectives
+5) Success Criteria
+6) Key Vocabulary
+7) Resources / Materials
+8) Lesson Activities (step-by-step with time estimates; include PLENARY as final step)
+9) Differentiation
+10) Assessment
+
+Keep language concise and suitable for a primary classroom (age-appropriate). Use bullet points and time estimates where helpful.`;
+  return prompt;
+}
+
+/* UI element refs */
+const gradeInput = document.getElementById('grade');
+const durationInput = document.getElementById('duration');
+const promptArea = document.getElementById('promptArea');
+const generateBtn = document.getElementById('generateBtn');
+const copyBtn = document.getElementById('copyBtn');
+
+/* initial preview */
+updatePreview();
+
+/* event listeners */
+weekSel.addEventListener('change', updatePreview);
+
+generateBtn.addEventListener('click', () => {
+  const grade = (gradeInput.value || "3").trim();
+  const duration = (durationInput.value || "70").trim();
+  const week = Number(weekSel.value);
+  const lesson = findLesson(week);
+  if (!lesson) {
+    alert('No lesson data for that week. Choose another week.');
+    return;
+  }
+
+  const prompt = buildPrompt(grade, duration, lesson);
+  promptArea.value = prompt;
+
+  // open ChatGPT with prefilled prompt via URL parameter
+  const encoded = encodeURIComponent(prompt);
+  const chatUrl = `https://chat.openai.com/?q=${encoded}`;
+  window.open(chatUrl, '_blank');
+});
+
+copyBtn.addEventListener('click', async () => {
+  const text = promptArea.value;
+  if (!text) { alert('Nothing to copy. Generate the prompt first.'); return; }
+  try {
+    await navigator.clipboard.writeText(text);
+    alert('Prompt copied to clipboard — paste into ChatGPT if needed.');
+  } catch (e) {
+    // fallback
+    promptArea.select();
+    document.execCommand('copy');
+    alert('Prompt copied (fallback).');
+  }
+});
+  </script>
+</body>
+</html>
