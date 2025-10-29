@@ -3,65 +3,131 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Grade 3 — Lesson Plan Generator</title>
+  <title>Grade 2 — Lesson Plan Generator</title>
   <style>
-    body { font-family: Arial, sans-serif; background:#f7f9fb; color:#222; margin:24px; }
-    .container { max-width:900px; margin:0 auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 6px 18px rgba(10,30,60,0.06); }
-    h1 { margin-top:0; color:#0b66c3; }
-    label { display:block; margin-top:12px; font-weight:600; }
-    select,input,textarea,button { width:100%; padding:10px; margin-top:8px; border-radius:6px; border:1px solid #d1d7de; box-sizing:border-box; font-size:15px; }
-    .row { display:flex; gap:12px; }
+    /* Added Inter font for a cleaner look */
+    body { font-family: 'Inter', Arial, sans-serif; background:#f7f9fb; color:#333; margin:24px; line-height: 1.6; }
+    .container { max-width:900px; margin:0 auto; background:#fff; padding:24px; border-radius:12px; box-shadow:0 6px 18px rgba(10,30,60,0.06); }
+    h1 { margin-top:0; color:#0b66c3; font-weight: 700; }
+    p { color: #555; }
+    label { display:block; margin-top:16px; font-weight:600; color: #444; }
+    /* Consistent styling for all form elements */
+    select,input,textarea,button { 
+      width:100%; 
+      padding:12px; 
+      margin-top:8px; 
+      border-radius:8px; 
+      border:1px solid #d1d7de; 
+      box-sizing:border-box; 
+      font-size:15px; 
+      font-family: 'Inter', Arial, sans-serif;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    /* Focus state for accessibility and polish */
+    select:focus, input:focus, textarea:focus {
+      border-color: #0b66c3;
+      box-shadow: 0 0 0 3px rgba(11, 102, 195, 0.1);
+      outline: none;
+    }
+    .row { display:flex; gap:16px; }
     .row > div { flex:1; }
-    button { background:#0b66c3; color:#fff; border:0; cursor:pointer; font-weight:700; }
-    button.secondary { background:#6c757d; margin-top:8px; }
-    textarea { min-height:160px; resize:vertical; background:#f4f6f8; }
+    /* Primary button styling */
+    button { background:#0b66c3; color:#fff; border:0; cursor:pointer; font-weight:700; font-size: 16px; transition: background-color 0.2s ease; }
+    button:hover { background: #0a58a6; }
+    /* Secondary button styling */
+    button.secondary { background:#6c757d; }
+    button.secondary:hover { background: #5a6268; }
+    
+    textarea { min-height:160px; resize:vertical; background:#f9fafb; color: #222; }
     small { color:#666; }
-    .meta { margin-top:10px; color:#444; }
-    @media (max-width:720px){ .row { flex-direction:column; } }
+    .meta { margin-top:16px; color:#444; }
+
+    /* Preview box styling */
+    .preview-box {
+      background:#fbfcfe;
+      border:1px solid #e6eef9;
+      padding:16px;
+      border-radius:8px;
+      margin-top: 8px;
+    }
+    .preview-box strong {
+      color: #0b66c3;
+    }
+    #objectivesPreview, #resourcesPreview {
+      margin-top:6px;
+      white-space:pre-wrap;
+      color:#111;
+      padding-left: 8px;
+      border-left: 3px solid #e6eef9;
+    }
+
+    /* Responsive design for smaller screens */
+    @media (max-width:720px){ 
+      .row { flex-direction:column; gap: 0; } 
+      body { margin: 16px; }
+      .container { padding: 16px; }
+    }
   </style>
+  <!-- Load Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <h1>Grade 3 — Lesson Plan Generator</h1>
-    <p>Pick a week, set duration (default 70), then <strong>Generate</strong>. The page will look up the unit/topic & objectives from your dataset and open ChatGPT with a prompt that asks it to generate the rest (success criteria, activities, plenary, vocabulary, differentiation, assessment).</p>
-
-    <label>Grade</label>
-    <input id="grade" value="3" />
+    <h1 id="mainHeading">Grade 2 — Lesson Plan Generator</h1>
+    <p>Pick a grade, then a week, set the duration (default 70 mins), then click <strong>Generate</strong>. The page will look up the unit/topic & objectives from the built-in dataset and open ChatGPT with a prompt to generate the rest of the lesson plan.</p>
 
     <div class="row">
       <div>
-        <label>Week number</label>
-        <select id="weekSelect"></select>
+        <label for="gradeSelect">Grade</label>
+        <select id="gradeSelect">
+          <option value="2">Grade 2</option>
+          <option value="3">Grade 3</option>
+        </select>
       </div>
       <div>
-        <label>Lesson duration (minutes)</label>
-        <input id="duration" value="70" />
+        <label for="weekSelect">Week number</label>
+        <select id="weekSelect"></select>
+      </div>
+    </div>
+    
+    <label for="duration">Lesson duration (minutes)</label>
+    <input id="duration" value="70" type="number" />
+
+
+    <label>Quick preview (Topic / Unit & Objectives will be filled automatically)</label>
+    <div class="preview-box">
+      <strong>Topic / Unit:</strong> <span id="topicPreview">—</span><br/>
+      <strong style="display:block; margin-top: 8px;">Learning Objectives:</strong>
+      <div id="objectivesPreview"></div>
+      <strong style="display:block; margin-top: 8px;">Resources:</strong>
+      <div id="resourcesPreview"></div>
+    </div>
+
+    <div style="margin-top:20px;">
+      <button id="generateBtn">Generate & Open ChatGPT</button>
+      <button id="copyBtn" class="secondary" style="margin-top:12px;">Copy Prompt to Clipboard</button>
+    </div>
+
+    <label for="promptArea" style="margin-top:20px">Generated prompt (you can edit here before sending)</label>
+    <textarea id="promptArea" placeholder="Generated prompt appears here..."></textarea>
+    
+    <!-- Custom modal for notifications -->
+    <div id="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+      <div style="background-color: #fff; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 400px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center;">
+        <p id="modalMessage" style="font-size: 16px; color: #333;"></p>
+        <button id="modalClose" style="background: #0b66c3; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-top: 10px;">OK</button>
       </div>
     </div>
 
-    <label>Quick preview (Topic / Unit & Objectives will be filled automatically)</label>
-    <div style="background:#fbfcfe;border:1px solid #e6eef9;padding:10px;border-radius:6px;">
-      <strong>Topic / Unit:</strong> <span id="topicPreview">—</span><br/>
-      <strong>Learning Objectives:</strong>
-      <div id="objectivesPreview" style="margin-top:6px;white-space:pre-wrap;color:#111;"></div>
-      <strong>Resources:</strong>
-      <div id="resourcesPreview" style="margin-top:6px;white-space:pre-wrap;color:#111;"></div>
-    </div>
-
-    <div style="margin-top:14px;">
-      <button id="generateBtn">Generate & Open ChatGPT</button>
-      <button id="copyBtn" class="secondary">Copy Prompt to Clipboard</button>
-    </div>
-
-    <label style="margin-top:14px">Generated prompt (you can edit before sending in ChatGPT)</label>
-    <textarea id="promptArea" placeholder="Generated prompt appears here..."></textarea>
-
-    <p class="meta"><small>Note: the site sends only the prompt to ChatGPT via opening a new tab with a prefilled message URL. You will need to press Enter / Send in ChatGPT to receive the lesson plan. The page does not use any external servers — everything runs in your browser.</small></p>
+    <p class="meta"><small>Note: This page sends only the prompt to ChatGPT by opening a new tab with a pre-filled message URL. You will need to press Enter / Send in ChatGPT to receive the lesson plan. No data is sent to any external servers.</small></p>
   </div>
 
   <script>
-/* ========== HARD-CODED DATA (from your sheet) ========== */
-const lessons = [
+/* ========== HARD-CODED DATA ========== */
+// This is the data that was originally for Grade 3, now labeled as Grade 2 per your request.
+const lessons_grade_2 = [
   { week:1, dates:"18/08/2025", unit:"DL3.1 Document Creation",
     objectives:`3TC.08 Navigate storage hierarchy appropriate to the device.
 3TC.04 Identify common features of onscreen layouts and icons across a range of applications.
@@ -233,121 +299,381 @@ const lessons = [
   { week:40, dates:"18/05/2026", unit:"End of Year Activities", objectives:``, resources:`` },
   { week:41, dates:"25/05/2026", unit:"End of Year Activities", objectives:``, resources:`` }
 ];
+
+// This is the new data you provided for Grade 3 (with '4TC' codes).
+const lessons_grade_3 = [
+  { week:1, dates:"18/08/2025", unit:"DL4.1 Presenting information on-screen",
+    objectives:`4TC.01 Develop fluency and accuracy when typing in increasing quantity.
+4TC.04 Understand how to create a folder structure and how to name folders and documents.`,
+    resources:`` },
+  { week:2, dates:"25/08/2025", unit:"DL4.1 Presenting information on-screen",
+    objectives:`4TC.02 Know what shortcuts are and be able to use shortcuts for cut, copy, paste, save, undo, re-do and help.
+4TC.05 Insert and complete a table within a text document.`,
+    resources:`` },
+  { week:3, dates:"01/09/2025", unit:"DL4.1 Presenting information on-screen",
+    objectives:`4TC.06 Edit, and organise, the layout of a document.`,
+    resources:`` },
+  { week:4, dates:"08/09/2025", unit:"DL4.1 Presenting information on-screen",
+    objectives:`4TC.03 Use devices to create increasingly sophisticated digital artefacts, including the use of sound, video, text and other multimedia.`,
+    resources:`` },
+  { week:5, dates:"15/09/2025", unit:"DL4.1 Presenting information on-screen",
+    objectives:`Presenting information on-screen project
+4TC.04 Understand how to create a folder structure and how to name folders and documents.
+4TC.02 Know what shortcuts are and be able to use shortcuts for cut, copy, paste, save, undo, re-do and help.
+4TC.05 Insert and complete a table within a text document.
+4TC.06 Edit, and organise, the layout of a document.
+4TC.03 Use devices to create increasingly sophisticated digital artefacts, including the use of sound, video, text and other multimedia.`,
+    resources:`` },
+  { week:6, dates:"22/09/2025", unit:"C4.1 Input, process, output",
+    objectives:`4CS.03 Identify a range of data recorded by input devices in computer systems, including data that is collected through sensors and data loggers.`,
+    resources:`` },
+  { week:7, dates:"29/09/2025", unit:"C4.1 Input, process, output",
+    objectives:`4CS.04 Identify a range of information communicated by output devices in computer systems.`,
+    resources:`` },
+  { week:8, dates:"06/10/2025", unit:"C4.1 Input, process, output",
+    objectives:`4CS.05 Identify that different types of file have different sizes, including text, audio, image, video and games.`,
+    resources:`` },
+  { week:9, dates:"13/10/2025", unit:"C4.1 Input, process, output",
+    objectives:`4CS.02 Know the functions of application and systems software.`,
+    resources:`` },
+  { week:10, dates:"20/10/2025", unit:"C4.1 Input, process, output",
+    objectives:`4CS.07 Identify the role of robots in service industries, including for delivery services, public transport and health care.
+4CS.01 Identify examples where a control system is used.
+4CS.06 Describe the role of a computer scientist within a range of industries.`,
+    resources:`` },
+  { week:11, dates:"27/10/2025", unit:"C4.1 Input, process, output",
+    objectives:`Computational Thinking Project
+4CS.03 Identify a range of data recorded by input devices in computer systems, including data that is collected through sensors and data loggers.
+4CS.04 Identify a range of information communicated by output devices in computer systems.
+4CS.01 Identify examples where a control system is used.
+4P.06 Know how to plan the instructions for objects within programs, including identifying inputs and outputs.
+4P.07 Know how to test different parts of a program systematically, to identify and debug errors.
+4CT.02 Follow, understand, edit and correct algorithms that use iteration, including count-controlled loops.`,
+    resources:`` },
+  { week:12, dates:"03/11/2025", unit:"C4.2 Data handling",
+    objectives:`4MD.03 Identify the difference between data and information.`,
+    resources:`` },
+  { week:13, dates:"10/11/2025", unit:"C4.2 Data handling",
+    objectives:`4MD.07 Identify data, records and fields within a data table.
+4MD.05 Identify appropriate data types for a field within a data table.
+4CS.05 Identify that different types of file have different sizes, including text, audio, image, video and games.`,
+    resources:`` },
+  { week:14, dates:"17/11/2025", unit:"C4.2 Data handling",
+    objectives:`4MD.01 Understand the differences between physical (paper-based) and digital databases.`,
+    resources:`` },
+  { week:15, dates:"24/11/2025", unit:"C4.2 Data handling",
+    objectives:`4MD.01 Understand the differences between physical (paper-based) and digital databases.
+4MD.02 Understand the advantages and disadvantages of using a form when collecting data.
+4MD.05 Identify appropriate data types for a field within a data table.`,
+    resources:`` },
+  { week:16, dates:"01/12/2025", unit:"C4.2 Data handling",
+    objectives:`4MD.04 Know how to sort data into a required order, including descending or ascending numerical values and alphabetically.
+4MD.06 Know how to use a database to answer a single question.
+4MD.01 Understand the differences between physical (paper-based) and digital databases.`,
+    resources:`` },
+  { week:17, dates:"08/12/2025", unit:"C4.2 Data handling",
+    objectives:`Data handling Project
+4MD.02 Understand the advantages and disadvantages of using a form when collecting data.
+4MD.04 Know how to sort data into a required order, including descending or ascending numerical values and alphabetically.
+4MD.05 Identify appropriate data types for a field within a data table.
+4MD.06 Know how to use a database to answer a single question.`,
+    resources:`` },
+  { week:18, dates:"15/12/2025", unit:"End of Term Activities", objectives:``, resources:`` },
+  { week:19, dates:"22/12/2025", unit:"End of Term Break", objectives:``, resources:`` },
+  { week:20, dates:"29/12/2025", unit:"End of Term Break", objectives:``, resources:`` },
+  { week:21, dates:"05/01/2026", unit:"DL4.4 Online communities",
+    objectives:`4SW.03 Treat others respectfully online and know that they should also be treated with respect.`,
+    resources:`` },
+  { week:22, dates:"12/01/2026", unit:"DL4.4 Online communities",
+    objectives:`4DW.03 Understand that online communication has changed the way people interact.`,
+    resources:`` },
+  { week:23, dates:"19/01/2026", unit:"DL4.4 Online communities",
+    objectives:`4DW.02 Know that digital communication enables online communities to exist.`,
+    resources:`` },
+  { week:24, dates:"26/01/2026", unit:"DL4.4 Online communities",
+    objectives:`4SW.05 Know the benefits and risks of online anonymity.
+4SW.04 Know that any images, videos, information or opinion shared online can be kept and shared further.`,
+    resources:`` },
+  { week:25, dates:"02/02/2026", unit:"DL4.4 Online communities",
+    objectives:`Online communities Project
+4SW.03 Treat others respectfully online and know that they should also be treated with respect.
+4DW.03 Understand that online communication has changed the way people interact.
+4DW.02 Know that digital communication enables online communities to exist.
+4SW.05 Know the benefits and risks of online anonymity.
+4SW.04 Know that any images, videos, information or opinion shared online can be kept and shared further.`,
+    resources:`` },
+  { week:26, dates:"09/02/2026", unit:"C4.3 Programming loops",
+    objectives:`4CT.10 Know how to develop algorithms that include repetition.
+4CT.03 Understand that the use of repetition can make algorithms more concise.
+4CT.05 Predict the outcome of algorithms that contain repetition.
+4P.04 Know how to develop programs that produce a desired output, which includes the use of the repeat command.`,
+    resources:`` },
+  { week:27, dates:"16/02/2026", unit:"Tet Holiday", objectives:``, resources:`` },
+  { week:28, dates:"23/02/2026", unit:"Tet Holiday", objectives:``, resources:`` },
+  { week:29, dates:"02/03/2026", unit:"C4.3 Programming loops",
+    objectives:`4P.07 Know how to test different parts of a program systematically, to identify and debug errors.
+4CT.02 Follow, understand, edit and correct algorithms that use iteration, including count-controlled loops.
+4P.01 Know how to add comments to blocks of code and explain the benefits of these comments.
+4P.02 Know how to develop programs with repetition.
+4CT.05 Predict the outcome of algorithms that contain repetition.
+4CT.06 Understand that decomposition is a process that is used to break a task into different parts (sub-routines).
+4CT.07 Know how to use decomposition to break tasks into different parts, represented as algorithms.`,
+    resources:`` },
+  { week:30, dates:"09/03/2026", unit:"C4.3 Programming loops",
+    objectives:`4CT.07 Know how to use decomposition to break tasks into different parts, represented as algorithms.
+4P.03 Know how to develop programs with iteration.
+4P.04 Know how to develop programs that produce a desired output, which includes the use of the repeat command.
+4CT.03 Understand that the use of repetition can make algorithms more concise.
+4CT.04 Compare and contrast algorithms designed for the same task to determine which produces the outcome that is best suited to the purpose.`,
+    resources:`` },
+  { week:31, dates:"16/03/2026", unit:"C4.3 Programming loops",
+    objectives:`4CT.04 Compare and contrast algorithms designed for the same task to determine which produces the outcome that is best suited to the purpose.
+4CT.08 Follow and understand algorithms that use a sub-routine.
+4CT.06 Understand that decomposition is a process that is used to break a task into different parts (sub-routines).`,
+    resources:`` },
+  { week:32, dates:"23/03/2026", unit:"C4.3 Programming loops",
+    objectives:`4CT.08 Follow and understand algorithms that use a sub-routine.
+4CT.02 Follow, understand, edit and correct algorithms that use iteration, including count-controlled loops.
+4P.03 Know how to develop programs with iteration.`,
+    resources:`` },
+  { week:33, dates:"30/03/2026", unit:"C4.3 Programming loops",
+    objectives:`Programming loops Project
+4CT.08 Follow and understand an algorithm that uses a sub-routine.
+4P.07 Know how to test different parts of a program systematically, to identify and debug errors.
+4P.08 Know how to develop programs for a physical computing device to produce an output from an input device.
+4P.03 Know how to develop programs with iteration.`,
+    resources:`` },
+  { week:34, dates:"06/04/2026", unit:"C4.5 Networks and Communication",
+    objectives:`4DC.04 Identify issues that may occur as a result of a failure in a network.`,
+    resources:`` },
+  { week:35, dates:"13/04/2026", unit:"C4.5 Networks and Communication",
+    objectives:`4DC.01 Explain the role of servers and clients in a network.`,
+    resources:`` },
+  { week:36, dates:"20/04/2026", unit:"C4.5 Networks and Communication",
+    objectives:`4DC.02 Describe the difference between the World Wide Web and the Internet.`,
+    resources:`` },
+  { week:37, dates:"27/04/2026", unit:"C4.5 Networks and Communication",
+    objectives:`4DC.03 Describe the differences between wi-fi and ethernet, including speed, security and the use of wires.`,
+    resources:`` },
+  { week:38, dates:"04/05/2026", unit:"C4.5 Networks and Communication",
+    objectives:`4DC.06 Know how to write and decode messages using the Caesar Cipher and the Pigpen Cipher.`,
+    resources:`` },
+  { week:39, dates:"11/05/2026", unit:"C4.5 Networks and Communication",
+    objectives:`Networks and Communication Project
+4DC.01 Explain the role of servers and clients in a network.
+4DC.02 Describe the difference between the World Wide Web and the Internet.
+4DC.03 Describe the differences between wi-fi and ethernet, including speed, security and the use of wires.
+4DC.04 Identify issues that may occur as a result of a failure in a network.`,
+    resources:`` },
+  { week:40, dates:"18/05/2026", unit:"End of Year Activities",
+    objectives:`Tasks as per the teacher.`,
+    resources:`` },
+  { week:41, dates:"25/05/2026", unit:"End of Year Activities",
+    objectives:`Tasks as per the teacher.`,
+    resources:`` }
+];
 /* ========== END DATA ========== */
 
-/* populate week dropdown */
-const weekSel = document.getElementById('weekSelect');
-for (let i=1;i<=41;i++){
-  const opt = document.createElement('option');
-  opt.value = i; opt.textContent = `Week ${i}`;
-  weekSel.appendChild(opt);
-}
+// Set the default lesson data to Grade 2
+let currentLessonData = lessons_grade_2;
 
-/* helper to find lesson by week */
-function findLesson(weekNum) {
-  const n = Number(weekNum);
-  return lessons.find(l => l.week === n) || null;
-}
+document.addEventListener('DOMContentLoaded', () => {
+  /* UI element refs */
+  const gradeSelect = document.getElementById('gradeSelect');
+  const weekSel = document.getElementById('weekSelect');
+  const durationInput = document.getElementById('duration');
+  const promptArea = document.getElementById('promptArea');
+  const generateBtn = document.getElementById('generateBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const mainHeading = document.getElementById('mainHeading');
 
-/* preview update */
-function updatePreview() {
-  const week = Number(weekSel.value);
-  const lesson = findLesson(week);
-  const topicEl = document.getElementById('topicPreview');
-  const objEl = document.getElementById('objectivesPreview');
-  const resEl = document.getElementById('resourcesPreview');
-
-  if (!lesson) {
-    topicEl.textContent = "No data for this week.";
-    objEl.textContent = "";
-    resEl.textContent = "";
-    return;
+  /* populate week dropdown function */
+  function populateWeekDropdown() {
+    weekSel.innerHTML = ''; // Clear existing options
+    for (let i=1;i<=41;i++){
+      const opt = document.createElement('option');
+      opt.value = i; 
+      
+      // Find lesson to add unit name to dropdown
+      const lesson = currentLessonData.find(l => l.week === i);
+      let weekText = `Week ${i}`;
+      if (lesson && lesson.unit) {
+        // Shorten long unit names for display
+        let unitName = lesson.unit.replace('(Project)', 'Proj.').replace('Computational Thinking', 'Comp. Thinking');
+        if (unitName.length > 25) {
+          unitName = unitName.substring(0, 22) + '...';
+        }
+        weekText = `Week ${i} - ${unitName}`;
+      } else if (lesson) {
+        weekText = `Week ${i} - ${lesson.unit}`;
+      }
+      opt.textContent = weekText;
+      weekSel.appendChild(opt);
+    }
   }
-  topicEl.textContent = lesson.unit || "—";
-  objEl.textContent = lesson.objectives || "—";
-  resEl.textContent = lesson.resources || "—";
-}
 
-/* build the ChatGPT prompt */
-function buildPrompt(grade, duration, lesson) {
-  // We intentionally send OBJECTIVES to ChatGPT and ask it to generate Success Criteria and other items.
-  const prompt = `Create a detailed ${duration}-minute lesson plan for Grade ${grade} (${lesson.unit || 'Unit/Topic not provided'}).
+  /* helper to find lesson by week */
+  function findLesson(weekNum) {
+    const n = Number(weekNum);
+    // Use the global currentLessonData variable
+    return currentLessonData.find(l => l.week === n) || null;
+  }
+  
+  /* Custom modal functions */
+  const modal = document.getElementById('modal');
+  const modalMessage = document.getElementById('modalMessage');
+  const modalClose = document.getElementById('modalClose');
+
+  function showModal(message) {
+    modalMessage.textContent = message;
+    modal.style.display = 'block';
+  }
+
+  modalClose.onclick = function() {
+    modal.style.display = 'none';
+  }
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = 'none';
+    }
+  }
+
+  /* preview update */
+  function updatePreview() {
+    const week = Number(weekSel.value);
+    const lesson = findLesson(week);
+    const topicEl = document.getElementById('topicPreview');
+    const objEl = document.getElementById('objectivesPreview');
+    const resEl = document.getElementById('resourcesPreview');
+
+    if (!lesson) {
+      topicEl.textContent = "No data for this week.";
+      objEl.textContent = "—";
+      resEl.textContent = "—";
+      return;
+    }
+    topicEl.textContent = lesson.unit || "—";
+    objEl.textContent = lesson.objectives || "—";
+    // Show "Not specified" if resources are empty
+    resEl.textContent = lesson.resources || "Not specified"; 
+  }
+
+  /* build the ChatGPT prompt */
+  function buildPrompt(grade, duration, lesson) {
+    // We intentionally send OBJECTIVES to ChatGPT and ask it to generate Success Criteria and other items.
+    const prompt = `Create a detailed ${duration}-minute lesson plan for Grade ${grade} (${lesson.unit || 'Unit/Topic not provided'}).
 
 Unit / Topic: ${lesson.unit || '-'}
 Week: ${lesson.week}
 Learning Objectives:
 ${lesson.objectives || '-'}
-Resources / Materials (for teacher reference):
-${lesson.resources || '-'}
+Resources / Materials (for teacher reference, do not list these in the student-facing materials):
+${lesson.resources || 'Not specified'}
 
 INSTRUCTIONS for ChatGPT:
 - Generate a clear Lesson Title that fits the unit & objectives.
-- Generate Success Criteria based directly on the Learning Objectives (short, student-friendly).
-- Produce Key Vocabulary (with short child-friendly definitions).
-- Create detailed Lesson Activities with time estimates (minutes) that together total approximately the lesson duration. Ensure the final activity is a PLENARY that checks understanding and consolidates learning.
+- Generate Success Criteria based *directly* on the Learning Objectives (short, student-friendly, "I can..." statements).
+- Produce Key Vocabulary (with short, child-friendly definitions).
+- Create detailed Lesson Activities with time estimates (in minutes) that together total approximately the lesson duration. Ensure the final activity is a PLENARY that checks understanding and consolidates learning.
 - Provide Differentiation notes for struggling / on-level / advanced learners.
-- Suggest short formative Assessment tasks (how to check learning during or after the lesson).
-- Format the lesson plan in this structure:
-1) Lesson Title
-2) Grade & Subject
-3) Duration
-4) Learning Objectives
-5) Success Criteria
-6) Key Vocabulary
-7) Resources / Materials
-8) Lesson Activities (step-by-step with time estimates; include PLENARY as final step)
-9) Differentiation
-10) Assessment
+- Suggest short, practical formative Assessment tasks (how to check learning during or after the lesson).
+- Format the lesson plan in this *exact* structure:
+1) **Lesson Title:**
+2) **Grade & Subject:**
+3) **Duration:**
+4) **Learning Objectives:** (List the objectives provided above)
+5) **Success Criteria:**
+6) **Key Vocabulary:**
+7) **Resources & Materials:** (List what's needed for the lesson, e.g., "Whiteboard", "Student computers", "Handout X". Do not just copy the teacher reference notes.)
+8) **Lesson Activities:** (Step-by-step with time estimates, e.g., "1. Starter (5 mins): ...", "2. Main Activity (20 mins): ...", "3. Plenary (10 mins): ...")
+9) **Differentiation:**
+10) **Assessment:**
 
 Keep language concise and suitable for a primary classroom (age-appropriate). Use bullet points and time estimates where helpful.`;
-  return prompt;
-}
-
-/* UI element refs */
-const gradeInput = document.getElementById('grade');
-const durationInput = document.getElementById('duration');
-const promptArea = document.getElementById('promptArea');
-const generateBtn = document.getElementById('generateBtn');
-const copyBtn = document.getElementById('copyBtn');
-
-/* initial preview */
-updatePreview();
-
-/* event listeners */
-weekSel.addEventListener('change', updatePreview);
-
-generateBtn.addEventListener('click', () => {
-  const grade = (gradeInput.value || "3").trim();
-  const duration = (durationInput.value || "70").trim();
-  const week = Number(weekSel.value);
-  const lesson = findLesson(week);
-  if (!lesson) {
-    alert('No lesson data for that week. Choose another week.');
-    return;
+    return prompt;
   }
 
-  const prompt = buildPrompt(grade, duration, lesson);
-  promptArea.value = prompt;
+  /* initial setup */
+  populateWeekDropdown(); // Populate for the default grade (Grade 2)
+  updatePreview(); // Show preview for Week 1 of Grade 2
 
-  // open ChatGPT with prefilled prompt via URL parameter
-  const encoded = encodeURIComponent(prompt);
-  const chatUrl = `https://chat.openai.com/?q=${encoded}`;
-  window.open(chatUrl, '_blank');
-});
+  /* event listeners */
+  weekSel.addEventListener('change', updatePreview);
 
-copyBtn.addEventListener('click', async () => {
-  const text = promptArea.value;
-  if (!text) { alert('Nothing to copy. Generate the prompt first.'); return; }
-  try {
-    await navigator.clipboard.writeText(text);
-    alert('Prompt copied to clipboard — paste into ChatGPT if needed.');
-  } catch (e) {
-    // fallback
-    promptArea.select();
-    document.execCommand('copy');
-    alert('Prompt copied (fallback).');
+  gradeSelect.addEventListener('change', () => {
+    const selectedGrade = gradeSelect.value;
+    if (selectedGrade === '2') {
+      currentLessonData = lessons_grade_2;
+    } else {
+      currentLessonData = lessons_grade_3;
+    }
+    
+    // Update UI text
+    mainHeading.textContent = `Grade ${selectedGrade} — Lesson Plan Generator`;
+    document.title = `Grade ${selectedGrade} — Lesson Plan Generator`;
+    
+    // Repopulate weeks and update preview
+    populateWeekDropdown();
+    weekSel.value = '1'; // Reset to week 1
+    updatePreview();
+    promptArea.value = ''; // Clear old prompt
+  });
+
+  generateBtn.addEventListener('click', () => {
+    const grade = (gradeSelect.value || "2").trim(); // Use the dropdown value
+    const duration = (durationInput.value || "70").trim();
+    const week = Number(weekSel.value);
+    const lesson = findLesson(week);
+    if (!lesson) {
+      showModal('No lesson data for that week. Choose another week.');
+      return;
+    }
+
+    const prompt = buildPrompt(grade, duration, lesson);
+    promptArea.value = prompt;
+
+    // open ChatGPT with prefilled prompt via URL parameter
+    const encoded = encodeURIComponent(prompt);
+    const chatUrl = `https://chat.openai.com/?q=${encoded}`;
+    window.open(chatUrl, '_blank');
+  });
+
+  copyBtn.addEventListener('click', () => {
+    const text = promptArea.value;
+    if (!text) { 
+      showModal('Nothing to copy. Generate the prompt first.'); 
+      return; 
+    }
+    
+    // Use modern clipboard API if available
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(() => {
+        showModal('Prompt copied to clipboard!');
+      }).catch(err => {
+        console.warn('Modern clipboard write failed, falling back.', err);
+        fallbackCopy(text);
+      });
+    } else {
+      // Fallback for insecure contexts (like file://) or older browsers
+      fallbackCopy(text);
+    }
+  });
+  
+  function fallbackCopy(text) {
+    try {
+      promptArea.select();
+      promptArea.setSelectionRange(0, 99999); // For mobile devices
+      document.execCommand('copy');
+      showModal('Prompt copied to clipboard (fallback).');
+    } catch (e) {
+      console.error('Fallback copy failed', e);
+      showModal('Could not copy. Please copy manually.');
+    }
   }
+  
 });
   </script>
 </body>
 </html>
+
+
